@@ -40,7 +40,7 @@ public class PersonAuthenController {
                                   @RequestParam("personinfoTelephone") String personinfoTelephone,
                                   @RequestParam("imgCode") String imgCode,
                                   @RequestParam("code") String code){
-        return  personAuthenService.authAfterPhone(personinfoName,personinfoTelephone,imgCode,code);
+        return personAuthenService.authAfterPhone(personinfoName,personinfoTelephone,imgCode,code);
     }
 
 

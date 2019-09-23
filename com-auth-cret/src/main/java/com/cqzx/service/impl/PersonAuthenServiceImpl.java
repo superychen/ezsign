@@ -62,8 +62,15 @@ public class PersonAuthenServiceImpl implements PersonAuthenService {
         //将获取出来的数据判断是否为空，为空就保存当前账号到personinfo中去
         log.debug("取出的数据是否为空-->{}",String.valueOf(personMap.get("data")));
         if(StringUtils.equals(String.valueOf(personMap.get("data")),"{}")){
-            //将一些配置自定义
+            return authenticationService.registerPerson(perosoninfo);
+            /*//将一些配置自定义
             perosoninfo = registPerson(perosoninfo);
+            //从session里面取出注册的customer的信息，将personId存入到customer表中
+            Customer customer = (Customer) session.getAttribute("registerCustomer");
+            if(customer == null){
+                throw new ZxException(ExceptionEnums.SESSION_GET_ERROR);
+            }
+            customer.setCustomerPersonid(perosoninfo.getPersoninfoId());
             //注册以及人脸完成之后;第一个什么都不表示;第二位表示手机号认证;第三位表示银行卡四要素;第四位表示身份证，第七位表示人脸识别认证;
             perosoninfo.setPersoninfoAuthtype(1001001);
             Boolean hasPerson = isHasPerson(perosoninfo);
@@ -72,6 +79,16 @@ public class PersonAuthenServiceImpl implements PersonAuthenService {
             }
             //创建证书以及印章
             createSealAndCert(perosoninfo);
+            String sql = "update customer set customer_personid = '"+customer.getCustomerPersonid()+"' where " +
+                    "customer_id = '"+customer.getCustomerId()+"'";
+            //修改后的结果
+            Map<String, Object> upResult = dbService.executeSql(sql);
+            String upData = String.valueOf(upResult.get("data"));
+            log.debug("修改后的结果--->{}",upResult);
+            //比较当前比较的结果,修改结果
+            if (StringUtils.equals(upData,"1")) {
+                return true;
+            }*/
         }else{
             //将查询到的结果转换为json字符串
             String data = ToJson.stringToJson(String.valueOf(personMap.get("data")));
@@ -105,7 +122,6 @@ public class PersonAuthenServiceImpl implements PersonAuthenService {
                 }
             }
         }
-        return false;
     }
 
     /**
@@ -127,7 +143,8 @@ public class PersonAuthenServiceImpl implements PersonAuthenService {
             throw new ZxException(ExceptionEnums.BANK4_CODE_ERROR);
         }
         //银行卡4要素认证
-        authenticationService.bank4Auth(bankid, idnumber, fullname, phonenum);
+        String bank4Auth = authenticationService.bank4Auth(bankid, idnumber, fullname, phonenum);
+        log.debug("银行卡四要素验证结果：{}",bank4Auth);
         Perosoninfo perosoninfo = new Perosoninfo();
 
         //先判断当前的personinfo是否已经认证过了的,就不能在认证
@@ -150,6 +167,7 @@ public class PersonAuthenServiceImpl implements PersonAuthenService {
             //创建证书以及印章
             createSealAndCert(perosoninfo);
         }else{
+            log.debug("map---》{}",personMap.get("data"));
             //将查询到的结果转换为json字符串
             String data = ToJson.stringToJson(String.valueOf(personMap.get("data")));
             log.debug("data ----> {}",data);
@@ -196,9 +214,9 @@ public class PersonAuthenServiceImpl implements PersonAuthenService {
      */
     @Override
     public Boolean authAfterPhone(String personinfoName, String personinfoTelephone, String imgCode, String code) {
-        //校验图片验证码
-        Map<String, Object> imgData = dbService.getString(personinfoTelephone + "kapaImg");
-        String  codeImg = (String) imgData.get("data");//得到redis中的图片验证码
+        //校验图片验证码,从session里面取出图形验证码
+        String codeImg = (String) session.getAttribute("imgcode");
+        log.debug("从session里面取出来的图形验证码：{}",codeImg);
         if (!StringUtils.equals(imgCode,codeImg)) {
             throw new ZxException(ExceptionEnums.IMG_CODE_ERROR);
         }
@@ -211,6 +229,7 @@ public class PersonAuthenServiceImpl implements PersonAuthenService {
 
         String sql = "select * from personinfo where personinfo_name='"+personinfoName+"' and "+
                      "personinfo_telephone = '"+personinfoTelephone+"'";
+
         HashMap<String, Object> map = new HashMap<>();
         Map<String, Object> selectRes = dbService.findBySQL(sql, map);
         //将查询出来的数据

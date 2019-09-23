@@ -123,10 +123,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public Boolean registerPerson(Perosoninfo perosoninfo) {
         Perosoninfo person = registPerson(perosoninfo);
         //从session里面取出注册的customer的信息，将personId存入到customer表中
-        Customer customer = (Customer) session.getAttribute("registerCustomer");
+        Customer customer;
+
+        customer = (Customer) session.getAttribute("registerCustomer");
         customer.setCustomerPersonid(person.getPersoninfoId());
         if(customer == null){
-            throw new ZxException(ExceptionEnums.SESSION_GET_ERROR);
+            customer = (Customer) session.getAttribute( "customer");//注册没有认证，那就取登录时候的session
+            if(customer == null){
+                throw new ZxException(ExceptionEnums.SESSION_GET_ERROR);
+            }
         }
 
         Map<String, Object> map = JavaBeanUtil.convertBeanToMap(person);
@@ -166,7 +171,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         perosoninfo.setPersoninfoId(MD5Hash.UUIDCreate());
         perosoninfo.setPersoninfoState(2);//2为认证通过的标志
         //注册以及人脸完成之后;第一位表示人脸识别;第二位表示手机号认证;第三位表示银行卡四要素;第四位表示身份证;
-        perosoninfo.setPersoninfoAuthtype(1101001);
+        perosoninfo.setPersoninfoAuthtype(1001001);
         //todo 调用套餐api，将对应的套餐进行关联，现在无法获得套餐id
 //        perosoninfo.setPersoninfoMealid();
         perosoninfo.setPersoninfoConfig1(1);//签约通知,1 短信和邮箱都通知

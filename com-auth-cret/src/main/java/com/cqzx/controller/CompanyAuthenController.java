@@ -27,14 +27,14 @@ public class CompanyAuthenController {
 
     /**
      * 确认打款
-     * @param companyinfoName 企业信息名称
+     * @param companyinfoCreditcode 企业信息名称
      * @return
      */
     @PostMapping("/remit")
     @ResponseStatus(HttpStatus.OK)
-    public Map<String,String> remit(@RequestParam(value = "companyinfoName") String companyinfoName){
+    public Map<String,String> remit(@RequestParam(value = "companyinfoCreditcode") String companyinfoCreditcode){
 
-        return companyAuthenService.remit(companyinfoName);
+        return companyAuthenService.remit(companyinfoCreditcode);
     }
 
 
@@ -43,7 +43,7 @@ public class CompanyAuthenController {
      * companyinfoName,企业名称
      * companyinfoCreditcode 社会信用代码
      * companyinfoFile 企业营业执照id
-     *companyinfoLegalperson 法人姓名
+     * companyinfoLegalperson 法人姓名
      */
     @PostMapping("/regist")
     public Boolean CompanyRegist(@RequestBody Companyinfo companyinfo){
@@ -55,15 +55,15 @@ public class CompanyAuthenController {
      * 对公打款认证
      * @param companyinfoAmount 银行打款金额,
      * @param companyinfoVerifycode 银行打款验证码,
-     * @param companyinfoName 企业名称
+     * @param companyinfoCreditcode 企业信用代码
      * @return 返回认证成功或者失败
      */
     @PostMapping("/remit/auth")
     public Boolean companyRemitAuth(@RequestParam("companyinfoAmount") String companyinfoAmount,
                                     @RequestParam("companyinfoVerifycode") String companyinfoVerifycode,
-                                    @RequestParam("companyinfoName") String companyinfoName){
+                                    @RequestParam("companyinfoCreditcode") String companyinfoCreditcode){
 
-        return companyAuthenService.companyRemitAuth(companyinfoAmount,companyinfoVerifycode,companyinfoName);
+        return companyAuthenService.companyRemitAuth(companyinfoAmount,companyinfoVerifycode,companyinfoCreditcode);
     }
 
     /**

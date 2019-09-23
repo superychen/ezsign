@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration scan="false" scanPeriod="60 seconds" debug="false">
+    <!--从springboot配置中获取参数-->
+    <springProperty scope="context" name="LOGSTASH_ADDRESS" source="logstash.address"/>
+    <springProperty scope="context" name="SERVER_NAME" source="spring.application.name"/>
+    <springProperty scope="context" name="SERVER_PORT" source="server.port"/>
+    <springProperty scope="context" name="LOG_LEVEL" source="log.level"/>
+    <springProperty scope="context" name="LOG_PATH" source="log.path"/>
+
+    <!--日志内容的格式-->
+    <property name="FORMAT" value="%cyan(%d{yyyy-MM-dd HH:mm:ss.SSS}) %yellow([%thread]) %highlight(%-5level%logger{35}) - %magenta(%msg%n)" />
+
+    <!-- 控制台输出 -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${FORMAT}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- LOGSTASH输出JSON格式的Appender -->
+    <appender name="LOGSTASH"
+              class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>${LOGSTASH_ADDRESS}</destination>
+        <!-- 日志输出编码 -->
+        <encoder
+                class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <pattern>
+                    <pattern>
+                        {
+                        "level": "%level",
+                        "service": "${SERVER_NAME}",
+                        "port": "${SERVER_PORT}",
+                        "trace": "%X{X-B3-TraceId:-}",
+                        "span": "%X{X-B3-SpanId:-}",
+                        "exportable": "%X{X-Span-Export:-}",
+                        "pid": "${PID:-}",
+                        "thread": "%thread",
+                        "class": "%logger{80}",
+                        "message": "%message"
+                        }
+                    </pattern>
+                </pattern>
+            </providers>
+        </encoder>
+    </appender>
+
+    <root level="${LOG_LEVEL}">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="LOGSTASH" />
+    </root>
+
+
+
+</configuration>

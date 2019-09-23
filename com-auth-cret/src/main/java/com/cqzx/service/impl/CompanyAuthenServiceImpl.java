@@ -65,17 +65,17 @@ public class CompanyAuthenServiceImpl implements CompanyAuthenService {
 
     /**
      * 企业打款
-     * @param companyinfoName
+     * @param companyinfoCreditcode
      * @return
      */
     @Override
-    public Map<String, String> remit(String companyinfoName) {
+    public Map<String, String> remit(String companyinfoCreditcode) {
 
         Random ra = new Random();
         String money = "0." + (ra.nextInt(9)+1);
         String ranCode = String.valueOf(new Random().nextInt(9999));
         //修改企业状态为已提交认证未审核的状态
-        String sql = "UPDATE  companyinfo SET companyinfo_state= "+1+",companyinfo_amount='"+money+"',companyinfo_verifycode='"+ranCode+"' where companyinfo_name='"+companyinfoName+"' ";
+        String sql = "UPDATE  companyinfo SET companyinfo_state= "+1+",companyinfo_amount='"+money+"',companyinfo_verifycode='"+ranCode+"' where companyinfo_creditcode='"+companyinfoCreditcode+"' ";
         //修改企业信息后的结果
         Map<String, Object> res = dbService.executeSql(sql);
 
@@ -100,8 +100,8 @@ public class CompanyAuthenServiceImpl implements CompanyAuthenService {
     public String companyUploadFile(byte[] bytes,String filename) {
         CodeEntity upload = fileService.upload(bytes, filename);
         Map<String,Object> data = (Map<String, Object>) upload.getData();
-        log.debug("uploadfile--->data--->{}",data.get("fileid"));
         String res = StringUtils.replace(String.valueOf(data.get("fileid")),";;;","/");
+        log.debug("res--->{}",res);
         return res;
     }
 
@@ -187,8 +187,8 @@ public class CompanyAuthenServiceImpl implements CompanyAuthenService {
      * @return 返回认证成功或者失败
      */
     @Override
-    public Boolean companyRemitAuth(String companyinfoAmount, String companyinfoVerifycode,String companyinfoName) {
-        Map<String, Object> map = dbService.get("companyinfo", "companyinfo_name", companyinfoName);
+    public Boolean companyRemitAuth(String companyinfoAmount, String companyinfoVerifycode,String companyinfoCreditcode) {
+        Map<String, Object> map = dbService.get("companyinfo", "companyinfo_creditcode", companyinfoCreditcode);
         //将查询到的结果转换为json字符串
         String data = ToJson.stringToJson(String.valueOf(map.get("data")));
         log.debug("data ----> {}",data);
@@ -208,7 +208,7 @@ public class CompanyAuthenServiceImpl implements CompanyAuthenService {
             throw new ZxException(ExceptionEnums.REMIT_AUTH_CODE_ERROR);
         }
 
-        String sql = "update companyinfo set companyinfo_state="+COMPANYINFO_STATE_PASS+" ,companyinfo_authtype="+COMPANYINFO_AUTHTYPE_REMIT+" where companyinfo_name='"+companyinfoName+"'";
+        String sql = "update companyinfo set companyinfo_state="+COMPANYINFO_STATE_PASS+" ,companyinfo_authtype="+COMPANYINFO_AUTHTYPE_REMIT+" where companyinfo_creditcode='"+companyinfoCreditcode+"'";
         //修改后的结果
         Map<String, Object> upResult = dbService.executeSql(sql);
         String upData = String.valueOf(upResult.get("data"));
